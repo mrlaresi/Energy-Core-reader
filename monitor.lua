@@ -40,25 +40,30 @@ function round(num)
 end
 
 
+-- Round to two decimal numbers
+function roundTwo(num)
+  return round(num*100)/100
+
+
 function suffix(num)
   local ret = 0
   if (num / 100000000000000000 > 1) then
-    ret =  num/(6*1000) .. "E RF"
+    ret =  roundTwo(num/(10^18)) .. "E RF"
 
   elseif (num / 100000000000000 > 1) then
-    ret = num/(5*1000) .. "P RF"
+    ret = roundTwo(num/(10^15)) .. "P RF"
 
   elseif (num / 100000000000 > 1) then
-    ret = num/(4*1000) .. "T RF"
+    ret = roundTwo(num/(10^12)) .. "T RF"
 
   elseif (num / 100000000 > 1) then
-    ret = num/(3*1000) .. "G RF"
+    ret = roundTwo(num/(10^9)) .. "G RF"
 
   elseif (num / 100000 > 1) then
-    ret = num/(2*1000) .. "M RF"
+    ret = roundTwo(num/(10^6)) .. "M RF"
 
   elseif (num / 100 > 1) then
-    ret = num/(1000) .. "K RF"
+    ret = roundTwo(num/(10^3)) .. "K RF"
 
   else
     ret = num .. "RF"
@@ -79,8 +84,8 @@ function draw()
 
   term.setCursor(w/11, h/2 + h/6)
   print(energy)
-  term.setCursor(w/2, h/2 + h/6)
-  print(math.floor(percentage*10000)/100 .. "%")
+  term.setCursor(w/2 - w/16, h/2 + h/6)
+  print(roundTwo(percentage*100) .. "%")
   term.setCursor(w-w/7, h/2 + h/6)
   print(max)
   term.setCursor(0, 0)
