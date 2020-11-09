@@ -1,5 +1,5 @@
 -- Author: Laresi
--- Version: 7.11.2020
+-- Version: 9.11.2020
 
 local comp = require("component")
 local term = require("term")
@@ -31,7 +31,7 @@ term.setCursorBlink(false)
 
 
 -- Rounds given float to decimal number
-function round(num)
+local function round(num)
   if (num % 1 >= 0.5) then
     return math.ceil(num)
   else
@@ -41,11 +41,12 @@ end
 
 
 -- Round to two decimal numbers
-function roundTwo(num)
+local function roundTwo(num)
   return round(num*100)/100
+end
 
 
-function suffix(num)
+local function suffix(num)
   local ret = 0
   if (num / 100000000000000000 > 1) then
     ret =  roundTwo(num/(10^18)) .. "E RF"
@@ -73,7 +74,7 @@ end
 
 
 -- Draws visualization of the energy stored inside the Energy Core
-function draw()
+local function draw()
   gpu.setBackground(0x000000)
   term.clear()
   local energy = storage.getEnergyStored()
@@ -83,11 +84,11 @@ function draw()
   local energyWidth = round(percentage * (w - barXStart * 2))
 
   term.setCursor(w/11, h/2 + h/6)
-  print(energy)
-  term.setCursor(w/2 - w/16, h/2 + h/6)
+  print(suffix(energy))
+  term.setCursor(w/2 - w/20, h/2 + h/6)
   print(roundTwo(percentage*100) .. "%")
   term.setCursor(w-w/7, h/2 + h/6)
-  print(max)
+  print(suffix(max))
   term.setCursor(0, 0)
 
   gpu.setBackground(0x0f0f0f)
