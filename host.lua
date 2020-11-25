@@ -23,7 +23,8 @@ end
 -- the receiving client
 local function sendEnergy()
     local energy = storage.getEnergyStored()
-    modem.send(target, port, energy)
+    local use = storage.getTransferPerTick()
+    modem.send(target, port, use, energy)
 end
 
 
@@ -41,9 +42,7 @@ if not (comp.isAvailable("modem")) then
 end
 
 
-
 modem.open(port)
-print(modem.getStrength())
 
 if not (modem.isOpen(port)) then
     print("Encountered an issue opening the port. Please try again.")
@@ -67,5 +66,5 @@ os.sleep(1)
 while (comp.computer.isRunning())
 do
     sendEnergy()
-    os.sleep(10)
+    os.sleep(2)
 end
