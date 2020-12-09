@@ -1,2 +1,3 @@
 # Energy-Core-reader
-Read data from Minecraft mod Draconic Evolution energy core using OpenComputers and lua code
+Read amount of energy stored inside Energy Core multiblock object from Minecraft mod Draconic Evolution. The code is run 
+by using another Minecraft mod, OpenComputers.
