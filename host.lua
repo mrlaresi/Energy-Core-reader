@@ -1,70 +1,106 @@
--- The port that will be used in
+--[[
+  Author: Laresi
+  Version: 27.1.2022
+
+  This version of the program runs as a server machine by directly connecting
+  the computer to an Energy Pylon on the Draconic Evolution core.
+  The server will listen for requests sent to port 100. You can change this
+  port by modifying the code.
+]]
+
+-- The port that will be used in data transfer
 local port = 100
+
 local comp = require("component")
+local term = require("term")
 local event = require("event")
-local storage = comp.draconic_rf_storage
-local max = storage.getMaxEnergyStored()
 local modem = comp.modem
-local target = ""
-local received = false
+local storage = comp.draconic_rf_storage
+local hasGpu = true
 
+local maxEnergy = storage.getMaxEnergyStored()
 
-local function handleMessage(from, msg)
-    if (msg == "draconicOK") then
-        print("Received confirmation; Connection established.")
-        target = from
-        modem.send(target, port, "OK")
-        received = true
-    end 
+-- Check if computer has a screen connected to it and has gpu installed.
+if not (term.isAvailable()) then
+  print("Error displaying output on screen.")
+  print("Either the computer is missing a screen or a gpu isn't installed.")
+  print("How are you even able to read this?")
+  hasGpu = false
 end
 
-
--- Sends amount of energy currently stored and max amount of energy to
--- the receiving client
-local function sendEnergy()
-    local energy = storage.getEnergyStored()
-    local use = storage.getTransferPerTick()
-    modem.send(target, port, use, energy)
+if (hasGpu) then
+  local gpu = comp.gpu
+  local w, h = gpu.maxResolution()
+  if (w > 80) then w = w/2 end
+  if (h > 25) then h = h/2 end
+  gpu.setResolution(w, h)
+  w, h = gpu.getResolution()
+  local barXStart = w/8
+  local barYStart = h/2 + h/4
+  term.setCursorBlink(false)
 end
-
 
 -- If computer isn't connected to Draconic Energy Core, stop execution.
 if not (comp.isAvailable("draconic_rf_storage")) then
-    print("No Draconic Energy Core found. Please connect the computer to\z
-            an Energy Core and try again.")
-    os.exit()
+  print("No Draconic Energy Core found.")
+  print("Please connect the computer to the Draconic Evolution core")
+  print("by connecting an Adapter block to Energy Pylon block and try again")
+  os.exit()
 end
 
+-- If computer doesn't have a network card, stop execution
 if not (comp.isAvailable("modem")) then
-    print("No network card was found. Please insert network card to the\z 
-            computer and try again")
-    os.exit()
+  print("No network card was found.")
+  print("Please insert a network card in to the computer and try again.")
+  os.exit()
 end
 
 
 modem.open(port)
-
+-- Should trigger only in rare cases if the port is already in use
 if not (modem.isOpen(port)) then
-    print("Encountered an issue opening the port. Please try again.")
-    os.exit()
+  print("Encountered an issue opening the port. Please try again.")
+  os.exit()
+end
+print("Listening on port " .. port)
+
+
+--- Checks that the received request is correct and responds accordingly
+-- @server address that received the request
+-- @target where the request will be sent
+-- @msg message sent by the target
+local function handleRequest(target, msg)
+  if (string.match(msg, "draconic")) then
+    print("Received request, sending core data")
+    -- Energy stored
+    local energy = storage.getEnergyStored()
+    -- Energy transfer rate from the core. Can be positive or negative
+    local transfer = storage.getTransferPerTick()
+
+    if (msg == "draconicStatus") then
+      modem.send(target, port, transfer, energy)
+    elseif (msg == "draconicInit") then
+      modem.send(target, port, transfer, energy, maxEnergy)
+    else
+      print("Request was invalid: " .. msg)
+    end
+  end
 end
 
 
--- Send broadcast message
-local sent = modem.broadcast(port, "draconicCore")
-print("Message sent; Waiting for connection...")
-while not (received) do
-    local _, _, from, _, _, message = event.pull("modem")
-    os.sleep(1)
-    handleMessage(from, message)
-end
-
-os.sleep(1)
-modem.send(target, port, max)
-os.sleep(1)
-
-while (comp.computer.isRunning())
-do
-    sendEnergy()
-    os.sleep(2)
+--- Loop events until an interrupt is received
+while (true) do
+  local id, server, sender, _port, _distance, message = event
+    .pullMultiple("interrupted", "modem_message")
+  print(id)
+  if (id) then
+    if (id == "modem_message") then
+      print("message received!" .. message)
+      handleRequest(sender, message)
+    elseif (id == "interrupted") then
+      term.clear()
+      print("Program stopping")
+      break
+    end
+  end
 end
