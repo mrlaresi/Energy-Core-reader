@@ -57,9 +57,10 @@ Easiest way to install a program to these virtual computers is by using wget on 
 
 Another way is to copy the contents of one of the files found on this repository. Then open the editor on your computer using 
 > edit {program_name}
+
 and middle mouse click to paste your code into the computer. Then simply ctrl-s and ctrl-w to save.
 
 
 
 # Running the program
-Simply type the programs name like **standalone** into the pc and it will start.
+Simply type the programs name like ***standalone*** into the pc and it will start.
